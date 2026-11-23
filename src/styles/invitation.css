@@ -1,0 +1,465 @@
+/* The invitation: one long sheet of embossed paper. Its first screen is the card from the envelope. */
+
+.sheet {
+  position: absolute;
+  inset: 0;
+  z-index: 10;
+}
+
+/* until the envelope is on screen the invitation is not laid out at all, so its fonts and
+   pictures do not compete with the envelope's for a slow connection */
+.app:not([data-ready='true']) .sheet {
+  display: none;
+}
+
+.sheet__close {
+  top: calc(env(safe-area-inset-top, 0px) + 12px);
+  left: calc(env(safe-area-inset-left, 0px) + 14px);
+  opacity: 0;
+  visibility: hidden;
+  transition:
+    opacity 0.4s ease,
+    visibility 0s 0.4s;
+}
+
+[data-stage='open'] .sheet__close {
+  opacity: 1;
+  visibility: visible;
+  transition: opacity 0.4s ease 0.3s;
+}
+
+.sheet__scroll {
+  position: absolute;
+  inset: 0;
+  overflow: hidden; /* the card cannot be scrolled until the ribbon is off */
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scrollbar-color: var(--line) transparent;
+  outline: none;
+}
+
+[data-stage='open'] .sheet__scroll {
+  overflow: hidden auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* on touch screens the page is the paper itself: no scrollbar drawn over it */
+@media (pointer: coarse) {
+  .sheet__scroll {
+    scrollbar-width: none;
+  }
+
+  .sheet__scroll::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+.sheet p,
+.sheet h2,
+.sheet h3 {
+  margin: 0;
+}
+
+/* printed, not painted: ink pressed a hair into the paper leaves a thread of light under each stroke */
+.sheet__scroll {
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.4);
+}
+
+.count {
+  text-shadow: 0 1px 1px rgba(40, 14, 16, 0.4);
+}
+
+.countdown {
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.5);
+}
+
+/* ---------- the card: rose corners, the arched frame, the invitation itself ----------
+ * Every relief lies on this one element, so overlapping pictures press into the same paper
+ * instead of covering each other. The frame is three pictures: its arch sits in the top
+ * padding, its foot in the bottom padding, and its sides repeat down the content box between.
+ */
+
+.hero {
+  --surface: var(--paper);
+  --frame-top: calc(var(--u) * 62 + env(safe-area-inset-top, 0px) * 0.5);
+  --frame-bottom: calc(var(--u) * 74);
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100%;
+  padding: calc(var(--frame-top) + var(--u) * 200) 0 calc(var(--frame-bottom) + var(--u) * 170);
+  background-color: var(--surface);
+  /* the frame's sides must not come last: the paper colour is clipped like the last picture in this list */
+  background-image:
+    var(--grain), var(--art-frame-side, none), var(--art-corner-tl, none), var(--art-corner-tr, none), var(--art-corner-bl, none),
+    var(--art-corner-br, none), var(--art-frame-top, none), var(--art-frame-bottom, none);
+  background-repeat: repeat, no-repeat round, no-repeat, no-repeat, no-repeat, no-repeat, no-repeat, no-repeat;
+  background-size:
+    220px 220px,
+    calc(var(--u) * 312) calc(var(--u) * 28),
+    calc(var(--u) * 190) calc(var(--u) * 300),
+    calc(var(--u) * 190) calc(var(--u) * 300),
+    calc(var(--u) * 190) calc(var(--u) * 300),
+    calc(var(--u) * 190) calc(var(--u) * 300),
+    calc(var(--u) * 312) calc(var(--u) * 200),
+    calc(var(--u) * 312) calc(var(--u) * 170);
+  background-position:
+    0 0,
+    50% 0,
+    left 3px top 3px,
+    right 3px top 3px,
+    left 3px bottom 3px,
+    right 3px bottom 3px,
+    50% var(--frame-top),
+    left 50% bottom var(--frame-bottom);
+  background-origin: border-box, content-box, border-box, border-box, border-box, border-box, border-box, border-box;
+  background-clip: border-box, content-box, border-box, border-box, border-box, border-box, border-box, border-box;
+  background-blend-mode: normal, hard-light, hard-light, hard-light, hard-light, hard-light, hard-light, hard-light;
+}
+
+/* the text climbs into the arch and down into the foot of the frame */
+.hero__text {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: calc(var(--u) * 7);
+  width: calc(var(--u) * 238);
+  margin: calc(var(--u) * -112) 0 calc(var(--u) * -92);
+  text-align: center;
+}
+
+.hero__bismillah {
+  color: var(--wine-deep);
+  font: 700 max(15px, calc(var(--u) * 19)) / 1.6 var(--font-display);
+}
+
+.hero__verse {
+  padding-bottom: calc(var(--u) * 2);
+  color: var(--ink);
+  font: 400 max(14.5px, calc(var(--u) * 16)) / 1.95 var(--font-display);
+  text-wrap: balance;
+}
+
+.hero__lead {
+  padding-top: calc(var(--u) * 3);
+  color: var(--ink);
+  font: 500 max(14.5px, calc(var(--u) * 16.5)) / 1.85 var(--font-body);
+}
+
+.hero__names {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.2em;
+  color: var(--wine);
+  font: 700 calc(var(--u) * 58) / 1.32 var(--font-display);
+}
+
+.hero__latin {
+  color: var(--ink-soft);
+  font: italic 500 max(13px, calc(var(--u) * 16)) / 1.2 var(--font-latin);
+  letter-spacing: 0.24em;
+}
+
+/* a small arrow under the frame: there is more below */
+.hero__cue {
+  position: absolute;
+  bottom: calc(var(--u) * 30 + env(safe-area-inset-bottom, 0px) * 0.5);
+  left: 50%;
+  width: calc(var(--u) * 22);
+  height: calc(var(--u) * 22);
+  margin-left: calc(var(--u) * -11);
+  fill: none;
+  stroke: var(--ink-soft);
+  stroke-width: 1.4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  opacity: 0;
+  transition: opacity 0.6s ease;
+}
+
+[data-stage='open'] .hero__cue {
+  opacity: 0.8;
+  animation: cue 2.2s 1.2s ease-in-out infinite;
+}
+
+@keyframes cue {
+  50% {
+    transform: translateY(calc(var(--u) * 5));
+  }
+}
+
+/* ---------- the day: behind the curtains ----------
+ * The valance hangs in front of the tops of the drapes, and its picture already carries those
+ * tops showing under its swags. So between the two lies a patch of plain paper, the size of the
+ * valance: it covers the drapes' own tops, which would otherwise be pressed in twice.
+ * Everything starts 3px down, clear of the section's edge (see the note on the flourish).
+ */
+
+.day {
+  --surface: var(--paper-light);
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: calc(var(--u) * 4);
+  min-height: calc(var(--u) * 548);
+  padding: calc(var(--u) * 136) calc(var(--u) * 100) calc(var(--u) * 64);
+  background-color: var(--surface);
+  background-image:
+    var(--grain), var(--art-valance, none), linear-gradient(var(--surface), var(--surface)), var(--art-drape-l, none), var(--art-drape-r, none);
+  background-repeat: repeat, no-repeat, no-repeat, no-repeat, no-repeat;
+  background-size:
+    220px 220px,
+    100% calc(var(--u) * 100),
+    100% calc(var(--u) * 100),
+    calc(var(--u) * 112) calc(var(--u) * 470),
+    calc(var(--u) * 112) calc(var(--u) * 470);
+  background-position:
+    0 0,
+    0 3px,
+    0 3px,
+    left top calc(var(--u) * 40 + 3px),
+    right top calc(var(--u) * 40 + 3px);
+  background-blend-mode: normal, hard-light, normal, hard-light, hard-light;
+  text-align: center;
+}
+
+.day__line {
+  color: var(--ink);
+  font: 500 max(15px, calc(var(--u) * 17.5)) / 1.9 var(--font-body);
+}
+
+.day__date {
+  color: var(--wine-deep);
+  font: 700 calc(var(--u) * 31) / 1.6 var(--font-display);
+}
+
+.day .flourish {
+  margin: calc(var(--u) * 8 - 3px) -3px;
+}
+
+
+/* ---------- the countdown: a band of the seal's colour ---------- */
+
+.count {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: calc(var(--u) * 16);
+  padding: calc(var(--u) * 44) calc(var(--u) * 24) calc(var(--u) * 50);
+  background-color: var(--rosewood);
+  background-image: var(--grain), linear-gradient(180deg, rgba(40, 14, 16, 0.22), rgba(40, 14, 16, 0) 22%, rgba(40, 14, 16, 0) 78%, rgba(40, 14, 16, 0.22));
+  background-size:
+    220px 220px,
+    100% 100%;
+  color: var(--paper-light);
+  text-align: center;
+}
+
+.count__title {
+  font: 400 calc(var(--u) * 25) / 1.5 var(--font-display);
+}
+
+/* a ticket of light paper with nicked corners */
+.countdown {
+  --nick: calc(var(--u) * 9);
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  width: calc(var(--u) * 316);
+  padding: calc(var(--u) * 18) calc(var(--u) * 10) calc(var(--u) * 13);
+  background-color: var(--paper-light);
+  background-image: var(--grain);
+  background-size: 220px 220px;
+  color: var(--ink);
+  -webkit-mask:
+    radial-gradient(circle at 0 0, transparent var(--nick), #000 calc(var(--nick) + 0.5px)) 0 0 / 51% 51% no-repeat,
+    radial-gradient(circle at 100% 0, transparent var(--nick), #000 calc(var(--nick) + 0.5px)) 100% 0 / 51% 51% no-repeat,
+    radial-gradient(circle at 0 100%, transparent var(--nick), #000 calc(var(--nick) + 0.5px)) 0 100% / 51% 51% no-repeat,
+    radial-gradient(circle at 100% 100%, transparent var(--nick), #000 calc(var(--nick) + 0.5px)) 100% 100% / 51% 51% no-repeat;
+  mask:
+    radial-gradient(circle at 0 0, transparent var(--nick), #000 calc(var(--nick) + 0.5px)) 0 0 / 51% 51% no-repeat,
+    radial-gradient(circle at 100% 0, transparent var(--nick), #000 calc(var(--nick) + 0.5px)) 100% 0 / 51% 51% no-repeat,
+    radial-gradient(circle at 0 100%, transparent var(--nick), #000 calc(var(--nick) + 0.5px)) 0 100% / 51% 51% no-repeat,
+    radial-gradient(circle at 100% 100%, transparent var(--nick), #000 calc(var(--nick) + 0.5px)) 100% 100% / 51% 51% no-repeat;
+}
+
+.countdown__cell {
+  display: grid;
+  gap: calc(var(--u) * 3);
+}
+
+.countdown__cell + .countdown__cell {
+  border-inline-start: 1px solid var(--line);
+}
+
+.countdown__value {
+  font: 500 calc(var(--u) * 33) / 1 var(--font-latin);
+  font-variant-numeric: lining-nums tabular-nums;
+}
+
+.countdown__label {
+  color: var(--ink-soft);
+  font: 500 max(12px, calc(var(--u) * 13.5)) / 1.5 var(--font-body);
+}
+
+/* ---------- the place ---------- */
+
+.place {
+  --surface: var(--paper);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: calc(var(--u) * 58) calc(var(--u) * 40) calc(var(--u) * 66);
+  background-color: var(--surface);
+  background-image: var(--grain);
+  background-size: 220px 220px;
+  text-align: center;
+}
+
+.medallion {
+  --d: calc(var(--u) * 158);
+  width: calc(var(--d) + 6px);
+  height: calc(var(--d) + 6px);
+  margin: -3px -3px calc(var(--u) * 12 - 3px);
+  background-color: var(--surface);
+  background-image: var(--grain), var(--art-medallion, none);
+  background-size:
+    220px 220px,
+    var(--d) var(--d);
+  background-position:
+    0 0,
+    3px 3px;
+  background-repeat: repeat, no-repeat;
+  background-blend-mode: normal, hard-light;
+}
+
+.place__title {
+  color: var(--ink-soft);
+  font: 500 max(13px, calc(var(--u) * 15)) / 1.8 var(--font-body);
+}
+
+.location {
+  display: grid;
+  justify-items: center;
+}
+
+.location__name {
+  color: var(--wine-deep);
+  font: 700 calc(var(--u) * 38) / 1.5 var(--font-display);
+}
+
+.location__area {
+  padding-bottom: calc(var(--u) * 20);
+  color: var(--ink);
+  font: 500 max(15px, calc(var(--u) * 17.5)) / 1.8 var(--font-body);
+}
+
+.location .btn {
+  width: calc(var(--u) * 230);
+}
+
+/* ---------- the close: a card laid on sculpted palm fronds ---------- */
+
+.closing {
+  --surface: var(--paper-deep);
+  display: grid;
+  justify-items: center;
+  padding: calc(var(--u) * 64) calc(var(--u) * 34) calc(var(--u) * 96 + env(safe-area-inset-bottom, 0px));
+  background-color: var(--surface);
+  /* the fronds run off every side; they fade into the paper above and, at the foot of the page, below */
+  background-image:
+    linear-gradient(180deg, var(--paper), transparent 14%), linear-gradient(0deg, var(--surface), transparent 9%), var(--grain),
+    var(--art-fronds, none);
+  background-size:
+    100% 100%,
+    100% 100%,
+    220px 220px,
+    cover;
+  background-position:
+    0 0,
+    0 0,
+    0 0,
+    50% 50%;
+  background-blend-mode: normal, normal, normal, hard-light;
+}
+
+.closing__card {
+  --surface: var(--paper-light);
+  display: grid;
+  justify-items: center;
+  gap: calc(var(--u) * 12);
+  width: 100%;
+  padding: calc(var(--u) * 34) calc(var(--u) * 24) calc(var(--u) * 22);
+  background-color: var(--surface);
+  background-image: var(--grain);
+  background-size: 220px 220px;
+  box-shadow:
+    0 1px 0 #fff inset,
+    0 calc(var(--u) * 2) calc(var(--u) * 4) rgba(var(--shadow), 0.2),
+    0 calc(var(--u) * 14) calc(var(--u) * 30) rgba(var(--shadow), 0.3);
+  text-align: center;
+}
+
+.closing__line {
+  color: var(--wine-deep);
+  font: 700 calc(var(--u) * 27) / 1.8 var(--font-display);
+}
+
+.closing__card .btn {
+  width: calc(var(--u) * 230);
+  margin-top: calc(var(--u) * 6);
+}
+
+.sheet__footer {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 2px 12px;
+  padding-top: calc(var(--u) * 4);
+}
+
+/* ---------- the text arrives once the ribbon is off ---------- */
+
+.reveal {
+  opacity: 0;
+}
+
+[data-card='open'] .reveal {
+  opacity: 1;
+}
+
+/* a line at a time, a beat apart, as the ribbon leaves */
+[data-stage='unfolding'] .reveal {
+  animation: reveal 1s var(--ease-out) both;
+  animation-delay: calc(var(--i) * 120ms + 1400ms);
+}
+
+[data-stage='closing'] .reveal {
+  transition: opacity 300ms ease;
+}
+
+@keyframes reveal {
+  from {
+    opacity: 0;
+    transform: translateY(calc(var(--u) * 10));
+  }
+}
+
+/* the sections further down rise into place as they are scrolled to */
+.rise {
+  opacity: 0;
+  transform: translateY(calc(var(--u) * 16));
+  transition:
+    opacity 0.9s var(--ease-out),
+    transform 0.9s var(--ease-out);
+}
+
+.rise.is-seen {
+  opacity: 1;
+  transform: none;
+}

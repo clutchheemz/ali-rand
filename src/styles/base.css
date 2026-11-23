@@ -1,0 +1,581 @@
+/* Tokens, page shell and the pieces every screen shares: embossed paper, buttons, dialogs. */
+
+/*
+ * Two papers. `theme` in src/config/event.ts picks one. The embossed pictures are colourless,
+ * so these few lines recolour everything, embossing included.
+ *   --paper, -light, -deep   the sheet, a lighter leaf laid on it, the ground under the palm fronds
+ *   --ink, --ink-soft, --line  text, quiet text, fine rules
+ *   --wine, --wine-deep      the wax seal, and the names and dates printed in its colour
+ *   --rosewood               the band behind the countdown
+ *   --satin                  the ribbon
+ *   --table*                 what the invitation lies on, seen beside it on wide screens
+ *   --shadow                 the colour of every shadow, as r, g, b
+ */
+
+/* blush: the tone of a pale rose petal */
+:root,
+:root[data-theme='blush'] {
+  --paper: #e6d3d4;
+  --paper-light: #f2e6e6;
+  --paper-deep: #d8c2c5;
+  --ink: #47343a;
+  --ink-soft: #6f565c;
+  --line: #bfa5a9;
+  --wine: #7b1f2b;
+  --wine-deep: #5e1721;
+  --rosewood: #836674;
+  --satin: #f1e3e1;
+  --table: #c9b3b5;
+  --table-light: #dac8c9;
+  --table-dark: #b09699;
+  --shadow: 80, 46, 52;
+  --orb: rgba(246, 236, 236, 0.86);
+}
+
+/* ivory: warm white card */
+:root[data-theme='ivory'] {
+  --paper: #f1e9dc;
+  --paper-light: #f7f2e9;
+  --paper-deep: #e6dccb;
+  --ink: #46372f;
+  --ink-soft: #77655a;
+  --line: #b9a797;
+  --wine: #7b1f2b;
+  --wine-deep: #5e1721;
+  --rosewood: #86575b;
+  --satin: #e8d6c8;
+  --table: #cbbcaa;
+  --table-light: #d8cab9;
+  --table-dark: #b5a590;
+  --shadow: 74, 48, 34;
+  --orb: rgba(247, 242, 233, 0.86);
+}
+
+:root {
+  --font-display: 'Amiri', 'Noto Naskh Arabic Variable', 'Geeza Pro', 'Traditional Arabic', serif;
+  --font-body: 'Noto Naskh Arabic Variable', 'Amiri', 'Geeza Pro', 'Segoe UI', serif;
+  --font-latin: 'Cormorant Garamond', Georgia, 'Times New Roman', serif;
+
+  --ease-out: cubic-bezier(0.16, 0.84, 0.24, 1);
+  --ease-in-out: cubic-bezier(0.65, 0.02, 0.2, 1);
+  --ease-paper: cubic-bezier(0.4, 0.05, 0.15, 1);
+
+  /* paper grain: a small tile of soft brown speckle, drawn once by the browser and repeated */
+  --grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n' x='0' y='0' width='100%25' height='100%25' color-interpolation-filters='sRGB'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.1' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .42 0 0 0 0 .3 0 0 0 0 .2 0 0 0 .3 -.1'/%3E%3C/filter%3E%3Crect width='220' height='220' filter='url(%23n)'/%3E%3C/svg%3E");
+
+  /* the stock itself is not perfectly even: a very faint cloudiness, a hand's width across */
+  --mottle: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='640' height='640'%3E%3Cfilter id='m' x='0' y='0' width='100%25' height='100%25' color-interpolation-filters='sRGB'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.008' numOctaves='3' seed='4' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .36 0 0 0 0 .2 0 0 0 0 .22 0 0 0 .14 -.058'/%3E%3C/filter%3E%3Crect width='640' height='640' filter='url(%23m)'/%3E%3C/svg%3E");
+
+  /* small / dynamic viewport units, with plain vh for browsers that lack them */
+  --svh: 1vh;
+  --dvh: 1vh;
+}
+
+@supports (height: 100svh) {
+  :root {
+    --svh: 1svh;
+    --dvh: 1dvh;
+  }
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+html,
+body {
+  height: 100%;
+  margin: 0;
+  overflow: hidden;
+  overscroll-behavior: none;
+}
+
+body {
+  position: fixed; /* stops iOS rubber-banding the whole page */
+  inset: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-body);
+  -webkit-font-smoothing: antialiased;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+button {
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+}
+
+:focus-visible {
+  outline: 2px solid var(--wine);
+  outline-offset: 3px;
+}
+
+/* ---------- page shell ---------- */
+
+.app {
+  /*
+   * The stage is the invitation itself: the whole screen on a phone, a phone-shaped sheet in the
+   * middle of a wider window. Every size inside it is a multiple of --u, one four-hundredth of
+   * its width, so the composition is the same on every phone.
+   */
+  --sw: min(100vw, max(calc(var(--svh) * 62), 340px));
+  --u: calc(var(--sw) / 400);
+  /* the envelope's ornaments also give way on a squat stage, where there is less height than width allows for */
+  --e: min(var(--u), calc(var(--svh) * 100 / 720));
+
+  position: fixed;
+  inset: 0;
+  height: 100dvh; /* browsers without this unit take their size from inset: 0 */
+  overflow: hidden;
+  /* the table the invitation lies on, seen only beside the stage on wide screens */
+  background: radial-gradient(120% 90% at 50% 40%, var(--table-light) 0%, var(--table) 55%, var(--table-dark) 100%);
+  opacity: 0;
+  transition: opacity 0.9s ease;
+}
+
+/* until the envelope is ready the page is not there at all: a tap on the loading spinner must not open it unseen */
+.app:not([data-ready='true']) {
+  visibility: hidden;
+}
+
+.app[data-ready='true'] {
+  opacity: 1;
+}
+
+.stage {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: var(--sw);
+  margin-left: calc(var(--sw) / -2);
+  overflow: hidden;
+  background: var(--paper);
+  box-shadow:
+    0 0 0 1px rgba(var(--shadow), 0.08),
+    0 0 90px rgba(var(--shadow), 0.35);
+  isolation: isolate;
+}
+
+/*
+ * The light in the room: one soft lamp above the top left corner, and the shade that gathers
+ * in the opposite one. It lies over everything on the stage and stays put while the page
+ * scrolls under it, which is what makes the sheet read as pearl-finished card, not flat colour.
+ */
+.stage::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 45;
+  background:
+    radial-gradient(95% 62% at 14% 2%, rgba(255, 255, 255, 0.36), rgba(255, 255, 255, 0) 64%),
+    radial-gradient(92% 62% at 94% 100%, rgba(var(--shadow), 0.2), rgba(var(--shadow), 0) 66%),
+    var(--mottle);
+  background-size:
+    100% 100%,
+    100% 100%,
+    640px 640px;
+  pointer-events: none;
+}
+
+/* covers the stage for a moment while the experience resets to the sealed envelope */
+.veil {
+  position: absolute;
+  inset: 0;
+  z-index: 60;
+  background: var(--paper);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.45s ease;
+}
+
+[data-stage='resetting'] .veil {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* ---------- embossed paper ----------
+ * A relief picture is mid-grey where the paper is flat, lighter on slopes that face the light
+ * and darker on slopes in shade. Blended as hard light over a surface colour it leaves flat
+ * paper untouched and presses the drawing into it. The grain always lies on top.
+ */
+
+/* Everything under the envelope waits for the envelope to be on screen, so the first view loads first. */
+.app[data-ready='true'],
+.og {
+  --art-corner-tl: url('../art/corner-tl.jpg');
+  --art-corner-tr: url('../art/corner-tr.jpg');
+  --art-corner-bl: url('../art/corner-bl.jpg');
+  --art-corner-br: url('../art/corner-br.jpg');
+  --art-frame-top: url('../art/frame-top.jpg');
+  --art-frame-side: url('../art/frame-side.jpg');
+  --art-frame-bottom: url('../art/frame-bottom.jpg');
+  --art-band: url('../art/band.jpg');
+  --art-band-mask: url('../art/band-mask.png');
+  --art-bow: url('../art/bow.jpg');
+  --art-bow-mask: url('../art/bow-mask.png');
+  --art-valance: url('../art/valance.jpg');
+  --art-drape-l: url('../art/drape-l.jpg');
+  --art-drape-r: url('../art/drape-r.jpg');
+  --art-medallion: url('../art/medallion.jpg');
+  --art-fronds: url('../art/fronds.jpg');
+  --art-flourish: url('../art/flourish.jpg');
+}
+
+.paper {
+  --surface: var(--paper);
+  background-color: var(--surface);
+  background-image: var(--grain);
+  background-size: 220px 220px;
+}
+
+.heart {
+  flex: none;
+  width: 0.36em;
+  height: 0.36em;
+  fill: var(--wine);
+  opacity: 0.82;
+}
+
+/*
+ * An embossed sprig between blocks of text; --surface is the colour of the paper it is pressed into.
+ *
+ * A relief picture must never come within 3px of the edge of the element it is blended into.
+ * Element edges rarely fall exactly on a device pixel (the layout is sized in fractions of the
+ * screen), and in the rows the browser then softens, the picture's grey shows instead of being
+ * blended away: a hairline box round the ornament. Measured on 24 phone sizes: at 3px, none.
+ * So the box is 3px larger all round than the picture, and negative margins give that back.
+ */
+.flourish {
+  --w: calc(var(--u) * 150);
+  --h: calc(var(--u) * 22.5);
+  flex: none;
+  width: calc(var(--w) + 6px);
+  height: calc(var(--h) + 6px);
+  margin: -3px;
+  background-color: var(--surface, var(--paper));
+  background-image: var(--grain), var(--art-flourish, none);
+  background-size:
+    220px 220px,
+    var(--w) var(--h);
+  background-position:
+    0 0,
+    3px 3px;
+  background-repeat: repeat, no-repeat;
+  background-blend-mode: normal, hard-light;
+}
+
+/*
+ * The flourish is a rectangle of paper, and Arabic hangs below its line (the dots of a final
+ * ya, a kasra). Wherever a flourish sits among text, the text is lifted above it, so the
+ * flourish can never cover part of a letter.
+ */
+.hero__text > *,
+.day > *,
+.closing__card > :not(dialog),
+.og__text > * {
+  position: relative;
+  z-index: 1;
+}
+
+.hero__text > .under,
+.day > .flourish,
+.closing__card > .flourish,
+.og__text > .flourish {
+  z-index: 0;
+}
+
+/* ---------- controls ---------- */
+
+/* a card-maker's button: a fine double rule on paper */
+.btn {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6em;
+  width: 100%;
+  min-height: 52px;
+  padding: 0.5em 1.2em;
+  border: 1px solid var(--ink-soft);
+  border-radius: 1px;
+  background: rgba(255, 252, 246, 0.55);
+  color: var(--ink);
+  font: 500 1.05rem/1.5 var(--font-body);
+  text-decoration: none;
+  transition:
+    transform 0.2s var(--ease-out),
+    background-color 0.2s ease;
+}
+
+.btn::before {
+  content: '';
+  position: absolute;
+  inset: 4px;
+  border: 1px solid var(--line);
+  pointer-events: none;
+}
+
+.btn:active {
+  transform: scale(0.98);
+  background: rgba(var(--shadow), 0.07);
+}
+
+@media (hover: hover) {
+  .btn:hover {
+    background: rgba(255, 252, 246, 0.95);
+  }
+}
+
+.btn__icon {
+  flex: none;
+  width: 1.2em;
+  height: 1.2em;
+  fill: none;
+  stroke: var(--wine);
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.link {
+  min-height: 44px;
+  padding: 0 0.7em;
+  border: 0;
+  background: none;
+  color: var(--ink-soft);
+  font: 500 0.98rem/1.5 var(--font-body);
+  text-decoration: underline;
+  text-decoration-color: var(--line);
+  text-underline-offset: 6px;
+}
+
+/* round corner buttons: music and close */
+.orb {
+  position: absolute;
+  z-index: 50;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 1px solid rgba(var(--shadow), 0.28);
+  border-radius: 50%;
+  background: var(--orb);
+  box-shadow:
+    inset 0 1px 0 #fff,
+    0 3px 10px rgba(var(--shadow), 0.2);
+  color: var(--wine);
+}
+
+.orb svg {
+  width: 18px;
+  height: 18px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.6;
+  stroke-linecap: round;
+}
+
+.music {
+  bottom: calc(env(safe-area-inset-bottom, 0px) + 14px);
+  left: calc(env(safe-area-inset-left, 0px) + 14px);
+}
+
+.music__bars {
+  display: flex;
+  align-items: flex-end;
+  gap: 3px;
+  height: 15px;
+}
+
+.music__bars i {
+  width: 2.5px;
+  height: 100%;
+  border-radius: 2px;
+  background: currentColor;
+  transform: scaleY(0.25);
+  transform-origin: bottom;
+}
+
+.music[data-state='on'] .music__bars i {
+  animation: equaliser 1.15s ease-in-out infinite;
+}
+
+.music__bars i:nth-child(2) {
+  animation-delay: -0.45s;
+}
+
+.music__bars i:nth-child(3) {
+  animation-delay: -0.8s;
+}
+
+.music__bars i:nth-child(4) {
+  animation-delay: -0.2s;
+}
+
+@keyframes equaliser {
+  50% {
+    transform: scaleY(1);
+  }
+}
+
+/* muted: a fine stroke across the bars */
+.music[data-state='off']::after,
+.music[data-state='error']::after {
+  content: '';
+  position: absolute;
+  width: 24px;
+  height: 1.5px;
+  border-radius: 1px;
+  background: currentColor;
+  transform: rotate(-45deg);
+}
+
+.music[data-state='error'] {
+  opacity: 0.5;
+}
+
+/* buffering: a thin ring turns round the button */
+.music[data-state='loading']::before {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border: 1.5px solid transparent;
+  border-top-color: var(--wine);
+  border-radius: 50%;
+  animation: spin 0.9s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ---------- bottom sheet for the share choices ---------- */
+
+.dialog {
+  width: 100%;
+  max-width: none;
+  height: 100%;
+  max-height: none;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  /* the dimmed page behind the panel is the dialog itself, so it is also there in browsers without ::backdrop */
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  background: rgba(58, 38, 30, 0.5);
+  color: inherit;
+}
+
+/* for the few old phones that do not know the dialog element and so would show it in the page */
+.dialog:not([open]) {
+  display: none;
+}
+
+.dialog[open] {
+  display: grid;
+  align-items: end;
+  justify-items: center;
+}
+
+.dialog::backdrop {
+  background: transparent;
+}
+
+.dialog__panel {
+  display: grid;
+  gap: 12px;
+  width: min(100%, 440px);
+  padding: 22px 22px calc(env(safe-area-inset-bottom, 0px) + 14px);
+  border-radius: 6px 6px 0 0;
+  box-shadow: 0 -12px 44px rgba(var(--shadow), 0.34);
+  text-align: center;
+  animation: sheet-up 0.38s var(--ease-out);
+}
+
+/* the title takes focus when the sheet opens, so no choice looks pre-selected; it needs no ring of its own */
+.dialog__title:focus {
+  outline: none;
+}
+
+.dialog__title {
+  margin: 0 0 4px;
+  color: var(--ink);
+  font: 700 1.35rem/1.6 var(--font-display);
+}
+
+/* the choices fill the panel, whichever section the dialog belongs to */
+.dialog .dialog__panel .btn {
+  width: 100%;
+  margin: 0;
+  padding: 0.5em 1.2em;
+  font-size: 1.05rem;
+}
+
+@keyframes sheet-up {
+  from {
+    transform: translateY(100%);
+  }
+}
+
+@media (min-width: 600px) {
+  .dialog[open] {
+    align-items: center;
+  }
+
+  .dialog__panel {
+    border-radius: 6px;
+    padding-bottom: 14px;
+  }
+}
+
+/* ---------- guests who ask for less motion get gentle cross-fades instead ---------- */
+
+@media (prefers-reduced-motion: reduce) {
+  .app *,
+  .app *::before,
+  .app *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+
+  .app .scene,
+  .app .wrap,
+  .app .reveal,
+  .app .rise {
+    transition: opacity 0.4s ease !important;
+  }
+
+  .app[data-stage='opening'] .scene,
+  .app[data-card='open'] .wrap {
+    opacity: 0;
+  }
+
+  /* nothing slides, lifts or shrinks: the envelope and the ribbon simply fade */
+  .app .sheet,
+  .app .wrap,
+  .app .wrap__half,
+  .app .wrap__bow,
+  .app .bow,
+  .app .bow__part,
+  .app .rise {
+    transform: none !important;
+  }
+
+  .app .bow__part {
+    opacity: 1 !important;
+  }
+}

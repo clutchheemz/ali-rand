@@ -1,0 +1,90 @@
+/* Link-preview artwork (brand.html only): the embossed card with its rose corners, sealed in wax. */
+
+.og {
+  --u: 1.5px; /* the page's design unit, enlarged for a 1200 px wide picture */
+  --e: 1.5px;
+  --surface: var(--paper);
+  position: relative;
+  width: 1200px;
+  height: 630px;
+  overflow: hidden;
+  background-color: var(--paper);
+  background-image:
+    var(--grain), var(--art-corner-tl), var(--art-corner-tr), var(--art-corner-bl), var(--art-corner-br);
+  background-repeat: repeat, no-repeat, no-repeat, no-repeat, no-repeat;
+  background-size:
+    220px 220px,
+    199.5px 315px,
+    199.5px 315px,
+    199.5px 315px,
+    199.5px 315px;
+  background-position:
+    0 0,
+    left top,
+    right top,
+    left bottom,
+    right bottom;
+  background-blend-mode: normal, hard-light, hard-light, hard-light, hard-light;
+}
+
+/* the light lies over everything, ornaments included, as it does on the site */
+.og::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(80% 110% at 42% 38%, rgba(255, 255, 255, 0.34), rgba(255, 255, 255, 0) 62%),
+    radial-gradient(60% 80% at 100% 100%, rgba(var(--shadow), 0.14), rgba(var(--shadow), 0) 62%);
+  pointer-events: none;
+}
+
+.og__text {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding-bottom: 10px;
+}
+
+.og__text p {
+  margin: 0;
+}
+
+/* the seal sits in the flow here, not at the point of a flap */
+.seal.og__seal {
+  position: relative;
+  top: auto;
+  left: auto;
+  width: 132px;
+  height: 132px;
+  margin: 0;
+}
+
+.og__caption {
+  padding-top: 10px;
+  color: var(--ink);
+  font: 500 36px/1.6 var(--font-body);
+}
+
+.og__names {
+  display: flex;
+  align-items: center;
+  gap: 0.22em;
+  color: var(--wine);
+  font: 700 142px/1.24 var(--font-display);
+}
+
+/* clear of the dots that hang under the last letter of the first name */
+.og .flourish {
+  --w: 270px;
+  --h: 40.5px;
+  margin-top: 13px;
+}
+
+.og__date {
+  padding-top: 8px;
+  color: var(--wine-deep);
+  font: 700 46px/1.5 var(--font-display);
+}

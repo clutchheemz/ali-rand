@@ -1,0 +1,2 @@
+# the same line endings on every computer, so a fresh copy builds byte for byte the same
+* text=auto eol=lf

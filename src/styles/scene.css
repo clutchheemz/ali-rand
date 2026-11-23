@@ -1,0 +1,446 @@
+/* The sealed envelope. It is the whole screen: four embossed flaps meeting under a wax seal. */
+
+.scene {
+  position: absolute;
+  inset: 0;
+  z-index: 30;
+  overflow: hidden;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+.app:not([data-stage='sealed'], [data-stage='opening']) .scene {
+  visibility: hidden;
+}
+
+.env,
+.pocket,
+.flap,
+.lid,
+.lid__paper {
+  position: absolute;
+  inset: 0;
+}
+
+/* ---------- the flaps: one sheet of embossed paper each ---------- */
+
+.flap,
+.lid__paper {
+  background-color: var(--paper);
+  background-repeat: repeat, no-repeat, no-repeat, no-repeat;
+  /* grain, the way the flap catches the light, then the embossing */
+  background-blend-mode: normal, normal, hard-light, hard-light;
+}
+
+.flap--left {
+  clip-path: polygon(0 0, 50.2% 51%, 0 100%);
+  background-image:
+    var(--grain), linear-gradient(100deg, rgba(255, 255, 255, 0.16), rgba(var(--shadow), 0.07) 62%), url('../art/vine-l.jpg');
+  background-size:
+    220px 220px,
+    100% 100%,
+    calc(var(--e) * 130) calc(var(--e) * 520);
+  background-position:
+    0 0,
+    0 0,
+    left calc(var(--e) * 12) top 50%;
+}
+
+.flap--right {
+  clip-path: polygon(100% 0, 49.8% 51%, 100% 100%);
+  background-image:
+    var(--grain), linear-gradient(260deg, rgba(var(--shadow), 0.02), rgba(var(--shadow), 0.09) 62%), url('../art/vine-r.jpg');
+  background-size:
+    220px 220px,
+    100% 100%,
+    calc(var(--e) * 130) calc(var(--e) * 520);
+  background-position:
+    0 0,
+    0 0,
+    right calc(var(--e) * 12) top 50%;
+}
+
+.flap--bottom {
+  clip-path: polygon(0 100%, 50% 49%, 100% 100%);
+  background-image:
+    var(--grain), linear-gradient(180deg, rgba(255, 255, 255, 0.2), rgba(var(--shadow), 0.03) 70%), url('../art/sprig-bottom-l.jpg'),
+    url('../art/sprig-bottom-r.jpg');
+  background-size:
+    220px 220px,
+    100% 100%,
+    calc(var(--e) * 150) calc(var(--e) * 220),
+    calc(var(--e) * 150) calc(var(--e) * 220);
+  background-position:
+    0 0,
+    0 0,
+    left calc(var(--e) * 34) bottom calc(var(--e) * 18),
+    right calc(var(--e) * 34) bottom calc(var(--e) * 18);
+}
+
+.lid__paper {
+  clip-path: polygon(0 0, 100% 0, 50% 52%);
+  background-image:
+    var(--grain), linear-gradient(180deg, rgba(255, 255, 255, 0.26), rgba(255, 255, 255, 0.04) 55%), url('../art/sprig-top-l.jpg'),
+    url('../art/sprig-top-r.jpg');
+  background-size:
+    220px 220px,
+    100% 100%,
+    calc(var(--e) * 120) calc(var(--e) * 170),
+    calc(var(--e) * 120) calc(var(--e) * 170);
+  background-position:
+    0 0,
+    0 0,
+    left calc(var(--e) * 38) top calc(var(--e) * 40),
+    right calc(var(--e) * 38) top calc(var(--e) * 40);
+}
+
+/* ---------- where one flap lies on another ---------- */
+
+.crease {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  fill: none;
+  pointer-events: none;
+}
+
+.crease path {
+  vector-effect: non-scaling-stroke;
+  stroke-linejoin: round;
+}
+
+/* the soft shadow a flap's edge throws on the paper under it */
+.crease--shade {
+  stroke: rgba(var(--shadow), 0.4);
+  stroke-width: 11;
+  filter: blur(6px);
+  transform: translate(2px, 5px);
+}
+
+/* the cut edge of the paper itself */
+.crease--line {
+  stroke: rgba(var(--shadow), 0.26);
+  stroke-width: 1;
+}
+
+/* light catching the top of that edge */
+.crease--light {
+  stroke: rgba(255, 255, 255, 0.85);
+  stroke-width: 1.2;
+  transform: translate(0, -1.2px);
+}
+
+/* the lid's shadow on the pocket: deepens toward the point, lifts off as the lid opens */
+.lid-shadow {
+  position: absolute;
+  inset: 0;
+  filter: blur(calc(var(--e) * 12));
+  opacity: 0.62;
+  transform: translate(calc(var(--e) * 3), calc(var(--e) * 10));
+}
+
+.lid-shadow i {
+  position: absolute;
+  inset: 0;
+  background: rgb(var(--shadow));
+  clip-path: polygon(6% 4%, 94% 4%, 50% 52%);
+}
+
+/* the dark inside of the envelope, seen through its mouth once the lid is up */
+.env__inside {
+  position: absolute;
+  inset: 0;
+  clip-path: polygon(0 0, 100% 0, 50% 51.5%);
+  background:
+    linear-gradient(64deg, rgba(var(--shadow), 0.4), rgba(var(--shadow), 0) 30%),
+    linear-gradient(296deg, rgba(var(--shadow), 0.4), rgba(var(--shadow), 0) 30%),
+    linear-gradient(180deg, rgba(var(--shadow), 0.5), rgba(var(--shadow), 0.14) 78%);
+}
+
+/* ---------- the lid: hinged along the top of the screen ---------- */
+
+.lid {
+  --persp: calc(var(--svh) * 250);
+  transform-origin: 50% 0;
+  transform: perspective(var(--persp)) rotateX(0deg);
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+}
+
+/* darkens the lid as it tips away from the light */
+.lid__shade {
+  position: absolute;
+  inset: 0;
+  clip-path: polygon(0 0, 100% 0, 50% 52%);
+  background: linear-gradient(180deg, rgba(var(--shadow), 0.05), rgba(var(--shadow), 0.4));
+  opacity: 0;
+}
+
+.lid__title {
+  position: absolute;
+  top: calc(var(--e) * 62 + env(safe-area-inset-top, 0px) * 0.5);
+  left: 50%;
+  width: max(calc(var(--e) * 200), 160px);
+  margin-left: min(calc(var(--e) * -100), -80px);
+  text-align: center;
+}
+
+.scene__eyebrow {
+  margin: 0 0 0.2em;
+  color: var(--ink-soft);
+  font: italic 500 max(10.5px, calc(var(--e) * 15)) / 1.2 var(--font-latin);
+  letter-spacing: 0.22em;
+}
+
+/* printed, a little pressed into the paper */
+.scene__title {
+  margin: 0;
+  color: var(--wine-deep);
+  font: 700 max(15px, calc(var(--e) * 23)) / 1.5 var(--font-display);
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.6);
+}
+
+/* ---------- wax seal ---------- */
+
+.seal {
+  position: absolute;
+  top: 52%;
+  left: 50%;
+  width: calc(var(--e) * 132);
+  height: calc(var(--e) * 132);
+  margin: calc(var(--e) * -66) 0 0 calc(var(--e) * -66);
+}
+
+.seal i {
+  position: absolute;
+  inset: 0;
+}
+
+.seal__shadow {
+  inset: -6% !important;
+  background: radial-gradient(closest-side, rgba(52, 20, 14, 0.62) 58%, rgba(52, 20, 14, 0.3) 78%, rgba(52, 20, 14, 0) 100%);
+  transform: translate(3.5%, 6.5%);
+}
+
+.seal__wax {
+  background-color: var(--wine);
+  background-image: url('../art/seal.jpg');
+  background-size: 100% 100%;
+  background-blend-mode: hard-light;
+  -webkit-mask: url('../art/seal-mask.png') center / 100% 100% no-repeat;
+  mask: url('../art/seal-mask.png') center / 100% 100% no-repeat;
+  transition: transform 0.18s ease-out;
+}
+
+/* a slow ring of light that invites the tap */
+.seal__ring {
+  inset: 4% !important;
+  border: 1.5px solid rgba(123, 31, 43, 0.5);
+  border-radius: 50%;
+  opacity: 0;
+}
+
+[data-stage='sealed'] .seal__ring {
+  animation: seal-call 3.2s 1.4s ease-out infinite;
+}
+
+@keyframes seal-call {
+  0% {
+    opacity: 0.7;
+    transform: scale(0.94);
+  }
+
+  60%,
+  100% {
+    opacity: 0;
+    transform: scale(1.55);
+  }
+}
+
+/* the seal gives under the finger */
+.env:has(.env-hit:active) .seal__wax {
+  transform: scale(0.95);
+}
+
+@media (hover: hover) {
+  .env:has(.env-hit:hover) .seal__wax {
+    transform: scale(1.03);
+  }
+
+  .env:has(.env-hit:active) .seal__wax {
+    transform: scale(0.95);
+  }
+}
+
+/* ---------- hint and tap target ---------- */
+
+.env__hint {
+  position: absolute;
+  right: 0;
+  bottom: calc(var(--e) * 52 + env(safe-area-inset-bottom, 0px) * 0.6);
+  left: 0;
+  margin: 0;
+  color: var(--ink-soft);
+  font: 500 max(12.5px, calc(var(--e) * 16.5)) / 1.6 var(--font-body);
+  text-align: center;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.6);
+  transition: opacity 0.4s ease;
+}
+
+[data-stage='sealed'] .env__hint {
+  animation: breathe 2.8s ease-in-out infinite;
+}
+
+.app:not([data-stage='sealed']) .env__hint {
+  opacity: 0;
+}
+
+@keyframes breathe {
+  50% {
+    opacity: 0.55;
+  }
+}
+
+.env-hit {
+  position: absolute;
+  inset: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+}
+
+.env-hit:focus-visible {
+  outline-offset: -6px;
+}
+
+/* ---------- the opening: 3.0 s, matching FULL.opening in App.tsx ---------- */
+
+/* 0.00 s  the seal gives under the finger and springs back; a ring of light leaves it */
+[data-stage='opening'] .seal__wax {
+  animation: seal-press 520ms cubic-bezier(0.3, 1.6, 0.5, 1) both;
+}
+
+@keyframes seal-press {
+  0% {
+    transform: scale(1);
+  }
+
+  26% {
+    transform: scale(0.9);
+  }
+
+  100% {
+    transform: scale(1);
+  }
+}
+
+[data-stage='opening'] .seal__ring {
+  animation: seal-answer 760ms 60ms cubic-bezier(0.2, 0.7, 0.3, 1) both;
+}
+
+@keyframes seal-answer {
+  0% {
+    opacity: 0.85;
+    transform: scale(0.9);
+  }
+
+  100% {
+    opacity: 0;
+    transform: scale(2.1);
+  }
+}
+
+/*
+ * 0.24 s  the lid swings up on its hinge, the top of the screen, and carries the seal away.
+ *         A turning flap hardly seems to move through its first degrees, so it leaves
+ *         briskly and slows as it goes over; its shadow tells the eye it has lifted at once.
+ */
+[data-stage='opening'] .lid {
+  animation: lid-lift 1250ms 240ms cubic-bezier(0.32, 0.5, 0.36, 1) both;
+}
+
+@keyframes lid-lift {
+  from {
+    transform: perspective(var(--persp)) rotateX(0deg);
+  }
+
+  to {
+    transform: perspective(var(--persp)) rotateX(104deg);
+  }
+}
+
+/* the lid darkens as it tips away from the light */
+[data-stage='opening'] .lid__shade {
+  animation: fade-in 700ms 300ms ease-in both;
+}
+
+/* its shadow first deepens and slides out from under it, then thins away as the lid rises */
+[data-stage='opening'] .lid-shadow {
+  animation: shadow-lift 900ms 240ms both;
+}
+
+@keyframes shadow-lift {
+  0% {
+    opacity: 0.62;
+    transform: translate(calc(var(--e) * 3), calc(var(--e) * 10));
+    animation-timing-function: cubic-bezier(0.2, 0.7, 0.3, 1);
+  }
+
+  25% {
+    opacity: 0.74;
+    transform: translate(calc(var(--e) * 8), calc(var(--e) * 26));
+    animation-timing-function: ease-in;
+  }
+
+  100% {
+    opacity: 0;
+    transform: translate(calc(var(--e) * 16), calc(var(--e) * 70));
+  }
+}
+
+/* the seal's own shadow stays on the paper below and falls behind as the seal rises */
+[data-stage='opening'] .seal__shadow {
+  animation: seal-shadow-lift 620ms 240ms ease-in both;
+}
+
+@keyframes seal-shadow-lift {
+  0% {
+    opacity: 1;
+    transform: translate(3.5%, 6.5%);
+  }
+
+  100% {
+    opacity: 0;
+    transform: translate(16%, 42%) scale(1.3);
+  }
+}
+
+@keyframes fade-in {
+  to {
+    opacity: 1;
+  }
+}
+
+/* 1.1 s  the envelope slides down off the card, tilting a little as it goes */
+[data-stage='opening'] .pocket {
+  animation: pocket-away 1400ms 1100ms cubic-bezier(0.62, 0.02, 0.3, 1) both;
+}
+
+@keyframes pocket-away {
+  to {
+    transform: translateY(108%) rotate(-2deg);
+  }
+}
+
+/* the dimness inside lifts as soon as the envelope starts to move, so no edge of it is seen travelling */
+[data-stage='opening'] .env__inside {
+  animation: fade-out 420ms 1000ms ease both;
+}
+
+@keyframes fade-out {
+  to {
+    opacity: 0;
+  }
+}
